@@ -72,7 +72,7 @@ const DashboardPage = () => {
                 <div className="font-mono text-sm tracking-wide">1:29.708</div>
               </div>
               <div>
-                <div className="text-[10px] text-red-500/80 tracking-widest mb-1">POLE 2025</div>
+                <div className="text-[10px] text-red-500/80 tracking-widest mb-1">POLE 2026</div>
                 <div className="font-mono text-sm tracking-wide">M. Verstappen</div>
               </div>
               <div>

@@ -64,7 +64,7 @@ const LoginPage = () => {
         >
           {isLogin ? 'Switch to Setup Mode' : 'Switch to Login Mode'}
         </button>
-        <div className="mt-2 text-[10px]">© 2025 PITWALL FEDERATED telemetry. All rights reserved.</div>
+        <div className="mt-2 text-[10px]">© 2026 PITWALL FEDERATED telemetry. All rights reserved.</div>
       </footer>
     </div>
   );
