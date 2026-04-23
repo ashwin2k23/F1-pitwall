@@ -5,6 +5,8 @@ import axios from 'axios';
 import GamingLoginSettings from '../components/ui/gaming-login';
 import { AlertCircle } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const LoginPage = () => {
   const [searchParams] = useSearchParams();
   const isSetup = searchParams.get('setup') === 'true';
@@ -25,11 +27,11 @@ const LoginPage = () => {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-      const res = await axios.post(`http://localhost:5000${endpoint}`, { email, password });
-      
+      const res = await axios.post(`${API_URL}${endpoint}`, { email, password });
+
       // Artificial delay for the cool animation
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       login(res.data.user, res.data.token);
       navigate('/dashboard');
       return true; // Success
@@ -48,22 +50,21 @@ const LoginPage = () => {
       </div>
 
       <div className="relative z-20 w-full max-w-md animate-fadeIn">
-         {error && (
+        {error && (
           <div className="mb-4 p-3 rounded-lg bg-red-500/80 backdrop-blur-md border border-red-400 flex items-center gap-2 text-white text-sm shadow-xl absolute -top-16 left-0 w-full z-50">
             <AlertCircle className="w-4 h-4 shrink-0" />
             {error}
           </div>
         )}
-        <GamingLoginSettings.LoginForm onSubmit={handleLoginSubmit} isSubmitting={isSubmitting} />
+        <GamingLoginSettings.LoginForm
+          onSubmit={handleLoginSubmit}
+          isSubmitting={isSubmitting}
+          isLogin={isLogin}
+          onToggleMode={() => { setIsLogin(prev => !prev); setError(''); }}
+        />
       </div>
 
       <footer className="absolute bottom-4 left-0 right-0 text-center text-white/50 text-xs tracking-widest z-20 uppercase">
-        <button 
-          onClick={() => setIsLogin(!isLogin)} 
-          className="hover:text-white transition-colors"
-        >
-          {isLogin ? 'Switch to Setup Mode' : 'Switch to Login Mode'}
-        </button>
         <div className="mt-2 text-[10px]">© 2026 PITWALL FEDERATED telemetry. All rights reserved.</div>
       </footer>
     </div>

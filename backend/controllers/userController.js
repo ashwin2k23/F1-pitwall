@@ -1,10 +1,18 @@
-const { users } = require('./authController');
+const { findUserById, updateUser } = require('../db');
+
+const safeUser = (user) => ({
+    id: user.id,
+    email: user.email,
+    favoriteTeam: user.favoriteTeam,
+    favoriteDriver: user.favoriteDriver,
+    preferences: user.preferences
+});
 
 exports.getPreferences = async (req, res) => {
     try {
-        const user = users.find(u => u.id === req.user.id);
+        const user = findUserById(req.user.id);
         if (!user) return res.status(404).json({ msg: 'User not found' });
-        res.json({ id: user.id, email: user.email, favoriteTeam: user.favoriteTeam, favoriteDriver: user.favoriteDriver, preferences: user.preferences });
+        res.json(safeUser(user));
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -14,18 +22,14 @@ exports.getPreferences = async (req, res) => {
 exports.updatePreferences = async (req, res) => {
     const { favoriteTeam, favoriteDriver, preferences } = req.body;
     try {
-        const userIndex = users.findIndex(u => u.id === req.user.id);
-        if (userIndex === -1) return res.status(404).json({ msg: 'User not found' });
+        const updates = {};
+        if (favoriteTeam !== undefined) updates.favoriteTeam = favoriteTeam;
+        if (favoriteDriver !== undefined) updates.favoriteDriver = favoriteDriver;
+        if (preferences !== undefined) updates.preferences = preferences;
 
-        users[userIndex] = {
-            ...users[userIndex],
-            favoriteTeam: favoriteTeam !== undefined ? favoriteTeam : users[userIndex].favoriteTeam,
-            favoriteDriver: favoriteDriver !== undefined ? favoriteDriver : users[userIndex].favoriteDriver,
-            preferences: { ...users[userIndex].preferences, ...preferences }
-        };
-
-        const updated = users[userIndex];
-        res.json({ id: updated.id, email: updated.email, favoriteTeam: updated.favoriteTeam, favoriteDriver: updated.favoriteDriver, preferences: updated.preferences });
+        const updated = updateUser(req.user.id, updates);
+        if (!updated) return res.status(404).json({ msg: 'User not found' });
+        res.json(safeUser(updated));
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');

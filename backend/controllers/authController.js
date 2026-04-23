@@ -1,19 +1,26 @@
 const jwt = require('jsonwebtoken');
+const { findUserByEmail, createUser } = require('../db');
 
-// In-Memory Mock Database
-const users = [];
-exports.users = users;
+const safeUser = (user) => ({
+    id: user.id,
+    email: user.email,
+    favoriteTeam: user.favoriteTeam,
+    favoriteDriver: user.favoriteDriver,
+    preferences: user.preferences
+});
 
 exports.registerUser = async (req, res) => {
     const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ msg: 'Email and password are required.' });
     try {
-        const user = { id: Date.now().toString(), email, password, favoriteTeam: 'McLaren', favoriteDriver: 'Lando Norris', preferences: { darkMode: true } };
-        users.push(user);
-
+        if (findUserByEmail(email)) {
+            return res.status(400).json({ msg: 'An account with this email already exists. Please log in.' });
+        }
+        const user = createUser({ email, password });
         const payload = { user: { id: user.id } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '5h' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { id: user.id, email: user.email, preferences: user.preferences, favoriteTeam: user.favoriteTeam, favoriteDriver: user.favoriteDriver } });
+            res.json({ token, user: safeUser(user) });
         });
     } catch (err) {
         console.error(err.message);
@@ -23,20 +30,16 @@ exports.registerUser = async (req, res) => {
 
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
+    if (!email || !password) return res.status(400).json({ msg: 'Email and password are required.' });
     try {
-        let user = users.find(u => u.email === email);
-        if (!user) {
-             return res.status(400).json({ msg: 'Account not found. Please sign up first!' });
-        }
-        
-        if (user.password !== password) {
-             return res.status(400).json({ msg: 'Incorrect password. Please try again.' });
-        }
+        const user = findUserByEmail(email);
+        if (!user) return res.status(400).json({ msg: 'Account not found. Please sign up first!' });
+        if (user.password !== password) return res.status(400).json({ msg: 'Incorrect password. Please try again.' });
 
         const payload = { user: { id: user.id } };
         jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '5h' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, user: { id: user.id, email: user.email, preferences: user.preferences, favoriteTeam: user.favoriteTeam, favoriteDriver: user.favoriteDriver } });
+            res.json({ token, user: safeUser(user) });
         });
     } catch (err) {
         console.error(err.message);
