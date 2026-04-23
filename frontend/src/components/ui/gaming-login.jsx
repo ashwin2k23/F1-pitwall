@@ -53,12 +53,39 @@ const LoginForm = ({ onSubmit, isSubmitting, isLogin = true, onToggleMode }) => 
     return (
         <div className="p-8 rounded-2xl backdrop-blur-sm bg-black/50 border border-white/10 shadow-2xl">
             <div className="mb-8 text-center">
-                <h2 className="text-3xl font-bold mb-2 relative group">
+                <h2 className="text-3xl font-bold mb-6 relative group">
                     <span className="absolute -inset-1 bg-gradient-to-r from-red-600/30 via-red-500/30 to-orange-500/30 blur-xl opacity-75 group-hover:opacity-100 transition-all duration-500 animate-pulse"></span>
                     <span className="relative inline-block text-3xl font-bold mb-2 text-white tracking-widest uppercase">
                         PITWALL
                     </span>
                 </h2>
+                
+                {/* Mode Toggle Tabs */}
+                <div className="flex bg-white/5 p-1 rounded-lg border border-white/10 mb-6 max-w-xs mx-auto">
+                    <button
+                        type="button"
+                        onClick={() => !isLogin && onToggleMode()}
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                            isLogin 
+                            ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' 
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        Login
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => isLogin && onToggleMode()}
+                        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                            !isLogin 
+                            ? 'bg-red-600 text-white shadow-lg shadow-red-500/20' 
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                        Sign Up
+                    </button>
+                </div>
+
                 <p className="text-white/80 flex flex-col items-center space-y-1">
                     <span className="relative text-sm font-medium tracking-wide">
                         {isLogin ? 'Enter the telemetry grid' : 'Register your access credentials'}
@@ -130,20 +157,6 @@ const LoginForm = ({ onSubmit, isSubmitting, isLogin = true, onToggleMode }) => 
                     )}
                 </button>
             </form>
-
-            {/* Toggle between Login and Signup */}
-            <div className="mt-6 text-center">
-                <p className="text-sm text-white/60">
-                    {isLogin ? 'No clearance credentials?' : 'Already have access?'}{' '}
-                    <button
-                        type="button"
-                        onClick={onToggleMode}
-                        className="font-semibold text-white hover:text-red-400 transition-colors underline underline-offset-2"
-                    >
-                        {isLogin ? 'Register Here' : 'Log In'}
-                    </button>
-                </p>
-            </div>
         </div>
     );
 };
