@@ -44,7 +44,7 @@ const LoginPage = () => {
     <div className="relative min-h-[85vh] w-full flex flex-col items-center justify-center p-4">
       {/* Background Video layer */}
       <div className="fixed inset-0 z-[-1]">
-        <GamingLoginSettings.YoutubeBackground videoId="xImMTsU-MCE" />
+        <GamingLoginSettings.NativeVideoBackground videoSrc="/f1-background.mp4" />
       </div>
 
       <div className="relative z-20 w-full max-w-md animate-fadeIn">

@@ -9,6 +9,8 @@ export default {
     extend: {
       fontFamily: {
         serif: ['"Playfair Display"', 'serif'],
+        sans: ['"Inter"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
         background: 'var(--background)',

@@ -8,6 +8,11 @@ import LoginPage from './pages/LoginPage';
 import AuthContext, { AuthProvider } from './context/AuthContext';
 import { useContext } from 'react';
 
+import NewsPage from './pages/NewsPage';
+
+import BattlePage from './pages/BattlePage';
+import HighlightsPage from './pages/HighlightsPage';
+
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
   if (loading) return null;
@@ -26,6 +31,9 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              <Route path="/battle" element={<ProtectedRoute><BattlePage /></ProtectedRoute>} />
+              <Route path="/highlights" element={<ProtectedRoute><HighlightsPage /></ProtectedRoute>} />
+              <Route path="/news" element={<ProtectedRoute><NewsPage /></ProtectedRoute>} />
               <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             </Routes>

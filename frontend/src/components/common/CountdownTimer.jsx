@@ -30,13 +30,13 @@ const CountdownTimer = ({ targetDate = "2025-03-16T06:00:00Z" }) => { // Default
             key={value}
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-16 h-16 sm:w-20 sm:h-20 glass-panel flex items-center justify-center bg-slate-200/50 dark:bg-black/40 border-slate-300 dark:border-white/5"
+            className="w-16 h-16 sm:w-20 sm:h-20 glass-panel flex items-center justify-center bg-white/5 dark:bg-white/5 border-white/10 dark:border-white/10 backdrop-blur-md"
           >
-            <span className="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-slate-700 to-slate-400 dark:from-white dark:to-gray-500">
+            <span className="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400 dark:from-white dark:to-gray-400">
               {value.toString().padStart(2, '0')}
             </span>
           </motion.div>
-          <span className="text-xs sm:text-sm text-slate-500 dark:text-gray-500 mt-2 uppercase tracking-wider font-medium">{unit}</span>
+          <span className="text-xs sm:text-sm text-gray-400 dark:text-gray-400 mt-2 uppercase tracking-wider font-medium">{unit}</span>
         </div>
       ))}
     </div>

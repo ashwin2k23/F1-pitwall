@@ -63,7 +63,7 @@ const RaceCalendarWidget = () => {
          </div>
 
          {/* Pagination Controls */}
-         <div className="flex items-center justify-between pt-4 mt-2 border-t-2 border-red-600 dark:border-red-600/50">
+         <div className="flex items-center justify-between pt-4 mt-2 border-t border-slate-200 dark:border-white/10">
             <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500">
                Page {currentPage + 1} of {totalPages}
             </span>

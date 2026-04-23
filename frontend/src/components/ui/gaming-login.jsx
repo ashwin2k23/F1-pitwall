@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, Globe, MessageSquare, Gamepad2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const FormInput = ({ icon, type, placeholder, value, onChange, required }) => {
     return (
@@ -51,11 +52,26 @@ const YoutubeBackground = ({ videoId }) => {
             <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
             <iframe
                 className="absolute top-1/2 left-1/2 w-[150vw] h-[150vh] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&disablekb=1&playsinline=1`}
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&disablekb=1&playsinline=1`}
                 title="YouTube background"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 style={{ filter: 'brightness(0.7)' }}
+            />
+        </div>
+    );
+};
+
+const NativeVideoBackground = ({ videoSrc }) => {
+    return (
+        <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
+            <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
+            <video
+                autoPlay
+                loop
+                playsInline
+                className="absolute top-1/2 left-1/2 min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-70"
+                src={videoSrc}
             />
         </div>
     );
@@ -133,30 +149,29 @@ const LoginForm = ({ onSubmit, isSubmitting }) => {
                     </button>
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <div onClick={() => setRemember(!remember)} className="cursor-pointer">
-                            <ToggleSwitch checked={remember} onChange={() => setRemember(!remember)} id="remember-me" />
-                        </div>
-                        <label
-                            htmlFor="remember-me"
-                            className="text-sm text-white/80 cursor-pointer hover:text-white transition-colors"
-                            onClick={() => setRemember(!remember)}
-                        >
-                            Persist session
-                        </label>
-                    </div>
-                    <a href="#" className="text-sm text-white/60 hover:text-white transition-colors">
-                        Lost clearance?
-                    </a>
-                </div>
+                {/* Removed persist session and lost clearance */}
 
                 <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`w-full py-3 rounded-lg ${isSuccess ? 'animate-success' : 'bg-red-600 hover:bg-red-700'} text-white font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 shadow-lg shadow-red-500/20 hover:shadow-red-500/40`}
+                    className={`relative overflow-hidden w-full py-3 rounded-lg ${isSuccess ? 'animate-success' : 'bg-red-600 hover:bg-red-700'} text-white font-medium transition-all duration-200 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 shadow-lg shadow-red-500/20 hover:shadow-red-500/40`}
                 >
-                    {isSubmitting ? <span className="animate-pulse">Authenticating...</span> : 'Engage Systems'}
+                    <span className={`relative z-10 ${isSubmitting ? 'opacity-0' : 'opacity-100'}`}>Engage Systems</span>
+                    
+                    {isSubmitting && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                           <div className="absolute inset-0 bg-red-800 opacity-50"></div>
+                           <motion.div 
+                               initial={{ x: -150 }}
+                               animate={{ x: [ -150, 200 ] }}
+                               transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+                               className="absolute z-20 flex items-center gap-2"
+                           >
+                               <span className="text-2xl drop-shadow-[0_0_8px_rgba(255,255,255,1)]">🏎️</span>
+                               <span className="text-[10px] font-mono italic font-bold tracking-widest text-white animate-pulse">WARMING TYRES...</span>
+                           </motion.div>
+                        </div>
+                    )}
                 </button>
             </form>
 
@@ -172,7 +187,8 @@ const LoginForm = ({ onSubmit, isSubmitting }) => {
 
 const GamingLoginSettings = {
     LoginForm,
-    YoutubeBackground
+    YoutubeBackground,
+    NativeVideoBackground
 };
 
 export default GamingLoginSettings;

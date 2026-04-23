@@ -1,14 +1,17 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import AuthContext from '../context/AuthContext';
 import RaceCalendarWidget from '../components/dashboard/RaceCalendarWidget';
 import StandingsWidget from '../components/dashboard/StandingsWidget';
 import AnalyticsWidget from '../components/dashboard/AnalyticsWidget';
 import CountdownTimer from '../components/common/CountdownTimer';
 import CarShowcaseWidget from '../components/dashboard/CarShowcaseWidget';
+import WeatherStrategyWidget from '../components/dashboard/WeatherStrategyWidget';
+import TeamRadioWidget from '../components/dashboard/TeamRadioWidget';
 
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.preferences?.displayName || user?.email?.split('@')[0] || 'Guest';
+  const [standingsMode, setStandingsMode] = useState('drivers'); // 'drivers' | 'constructors'
 
   return (
     <div className="pt-2 pb-20">
@@ -93,9 +96,20 @@ const DashboardPage = () => {
         {/* Main Column */}
         <div className="lg:col-span-8 flex flex-col gap-12">
            <div>
-             <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Driver's <span className="text-red-600 italic">Cup</span></h3>
+             <div className="flex justify-between items-end mb-4">
+               <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">
+                 {standingsMode === 'drivers' ? "Driver's " : "Constructor's "} 
+                 <span className="text-red-600 italic">Cup</span>
+               </h3>
+               <button 
+                 onClick={() => setStandingsMode(prev => prev === 'drivers' ? 'constructors' : 'drivers')} 
+                 className="text-[10px] uppercase font-mono tracking-widest text-slate-500 hover:text-red-600 flex items-center gap-2 transition-colors"
+               >
+                 View {standingsMode === 'drivers' ? 'Constructors' : 'Drivers'}
+               </button>
+             </div>
              <div className="editorial-border">
-               <StandingsWidget />
+               <StandingsWidget mode={standingsMode} />
              </div>
            </div>
 
@@ -103,6 +117,12 @@ const DashboardPage = () => {
              <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Challengers <span className="text-red-600 italic">2026</span></h3>
              <div className="editorial-border">
                <CarShowcaseWidget />
+             </div>
+           </div>
+
+           <div>
+             <div className="h-96">
+               <TeamRadioWidget />
              </div>
            </div>
         </div>
@@ -117,9 +137,9 @@ const DashboardPage = () => {
            </div>
 
            <div>
-             <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Paddock <span className="text-red-600 italic">Intel</span></h3>
-             <div className="editorial-border h-64">
-               <AnalyticsWidget />
+             <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-4 tracking-tight">Track <span className="text-red-600 italic">Radar</span></h3>
+             <div className="editorial-border h-auto pb-4">
+               <WeatherStrategyWidget />
              </div>
            </div>
         </div>

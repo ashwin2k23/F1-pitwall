@@ -4,15 +4,19 @@ import { useContext } from 'react';
 import AuthContext from '../../context/AuthContext';
 import { Flag, User as UserIcon, LogOut } from 'lucide-react';
 
-import { DRIVER_IMAGES } from '../../utils/driverImages';
+import { getDriverImage } from '../../utils/driverImages';
+import LiveTelemetryClock from '../common/LiveTelemetryClock';
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
-  const driverPhotoUrl = user ? DRIVER_IMAGES[user?.favoriteDriver || 'Lando Norris'] : null;
+  const driverPhotoUrl = user ? getDriverImage(user?.favoriteDriver || 'Lando Norris') : null;
 
   const links = [
     { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Battle', path: '/battle' },
+    { name: 'Highlights', path: '/highlights' },
+    { name: 'News', path: '/news' },
     { name: 'History', path: '/history' },
   ];
 
@@ -47,6 +51,9 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-6">
+        <div className="hidden sm:block">
+          <LiveTelemetryClock />
+        </div>
         {user ? (
           <>
             <Link to="/profile" className="flex items-center gap-3 hover:opacity-70 transition-opacity group">
