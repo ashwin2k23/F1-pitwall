@@ -41,8 +41,8 @@ const DashboardPage = () => {
       <div className="mb-8 border-b-[3px] border-slate-900 dark:border-white pb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-5xl md:text-7xl font-serif text-slate-900 dark:text-white capitalize tracking-tighter">
-              {userName}'s<br/>
+            <h1 className="text-5xl md:text-7xl font-serif text-slate-900 dark:text-white tracking-tighter">
+              <span className="capitalize">{userName}</span>'s<br/>
               <span className="text-red-600 font-bold italic">Pit Wall.</span>
             </h1>
           </div>
