@@ -6,7 +6,7 @@ import AnalyticsWidget from '../components/dashboard/AnalyticsWidget';
 import CountdownTimer from '../components/common/CountdownTimer';
 import CarShowcaseWidget from '../components/dashboard/CarShowcaseWidget';
 import WeatherStrategyWidget from '../components/dashboard/WeatherStrategyWidget';
-import TeamRadioWidget from '../components/dashboard/TeamRadioWidget';
+import LiveTrackMapWidget from '../components/dashboard/LiveTrackMapWidget';
 
 const DashboardPage = () => {
   const { user } = useContext(AuthContext);
@@ -122,7 +122,7 @@ const DashboardPage = () => {
 
            <div>
              <div className="h-96">
-               <TeamRadioWidget />
+               <LiveTrackMapWidget />
              </div>
            </div>
         </div>
