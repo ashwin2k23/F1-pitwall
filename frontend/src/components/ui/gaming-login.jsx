@@ -86,7 +86,7 @@ const LoginForm = ({ onSubmit, isSubmitting, isLogin = true, onToggleMode }) => 
                     </button>
                 </div>
 
-                <p className="text-white/80 flex flex-col items-center space-y-1">
+                <div className="text-white/80 flex flex-col items-center space-y-1">
                     <span className="relative text-sm font-medium tracking-wide">
                         {isLogin ? 'Enter the telemetry grid' : 'Register your access credentials'}
                     </span>
@@ -98,7 +98,7 @@ const LoginForm = ({ onSubmit, isSubmitting, isLogin = true, onToggleMode }) => 
                         <span>🏎️</span>
                         <span className="animate-pulse">⏱️</span>
                     </div>
-                </p>
+                </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -156,6 +156,16 @@ const LoginForm = ({ onSubmit, isSubmitting, isLogin = true, onToggleMode }) => 
                         </div>
                     )}
                 </button>
+
+                <div className="mt-6 text-center">
+                    <button
+                        type="button"
+                        onClick={onToggleMode}
+                        className="text-white/60 hover:text-white text-sm transition-colors"
+                    >
+                        {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
+                    </button>
+                </div>
             </form>
         </div>
     );
