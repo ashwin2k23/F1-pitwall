@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, UserPlus, LogIn } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, UserPlus, LogIn, Volume2, VolumeX } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const FormInput = ({ icon, type, placeholder, value, onChange, required }) => {
@@ -21,17 +21,27 @@ const FormInput = ({ icon, type, placeholder, value, onChange, required }) => {
 };
 
 const NativeVideoBackground = ({ videoSrc }) => {
+    const [isMuted, setIsMuted] = React.useState(true);
+
     return (
         <div className="absolute inset-0 w-full h-full overflow-hidden bg-black">
             <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
             <video
                 autoPlay
                 loop
-                muted
+                muted={isMuted}
                 playsInline
                 className="absolute top-1/2 left-1/2 min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-70"
                 src={videoSrc}
             />
+            <button
+                type="button"
+                onClick={() => setIsMuted(!isMuted)}
+                className="absolute bottom-6 right-6 z-50 p-3 rounded-full bg-black/50 border border-white/20 text-white/80 hover:text-white hover:bg-black/80 transition-all backdrop-blur-sm"
+                title={isMuted ? "Unmute video" : "Mute video"}
+            >
+                {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+            </button>
         </div>
     );
 };
