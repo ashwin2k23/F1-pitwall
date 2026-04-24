@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import { Save, User, Settings } from 'lucide-react';
 import axios from 'axios';
-import { DRIVER_IMAGES } from '../utils/driverImages';
+import { getDriverImage } from '../utils/driverImages';
 
 const ProfilePage = () => {
   const { user, login } = useContext(AuthContext);
@@ -54,7 +54,7 @@ const ProfilePage = () => {
 
   if (!user) return <div className="p-8 text-center text-gray-400">Please sign in to view your profile.</div>;
 
-  const driverPhotoUrl = DRIVER_IMAGES[favoriteDriver];
+  const driverPhotoUrl = getDriverImage(favoriteDriver);
 
   // Custom Dropdown Component internal to the page to avoid breaking out
   const CustomSelect = ({ label, options, value, onChange }) => {
@@ -115,7 +115,7 @@ const ProfilePage = () => {
                     )}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white leading-none">{user?.preferences?.displayName || user.email?.split('@')[0]}</h2>
+                    <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white leading-none">{displayName || user?.preferences?.displayName || user.email?.split('@')[0]}</h2>
                     <p className="font-mono text-xs tracking-widest text-slate-500 mt-2 uppercase">{user.email}</p>
                   </div>
                 </div>
