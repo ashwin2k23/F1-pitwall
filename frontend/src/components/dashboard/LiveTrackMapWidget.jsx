@@ -135,7 +135,35 @@ const LiveTrackMapWidget = () => {
   }
 
   if (!isLive) {
-    return null;
+    return (
+      <div className="h-full flex flex-col pt-2 relative overflow-hidden bg-[#0a0a0a] border border-slate-800 rounded-md">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#111]">
+           <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center relative">
+                 <Map className="w-4 h-4 text-slate-500" />
+              </div>
+              <div>
+                 <div className="font-serif font-bold text-white tracking-tight">Live Track GPS</div>
+                 <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase">Telemetry Intercept</div>
+              </div>
+           </div>
+        </div>
+        
+        {/* Waiting Overlay Content */}
+        <div className="flex-1 flex flex-col justify-center items-center p-4">
+          <div className="w-16 h-16 rounded-full border border-slate-700 flex items-center justify-center mb-4 bg-slate-900">
+            <Map className="w-6 h-6 text-slate-600" />
+          </div>
+          <div className="text-sm font-bold tracking-widest text-slate-400 font-mono uppercase mb-2">
+            Waiting for next live match
+          </div>
+          <div className="text-xs text-slate-600 text-center max-w-xs leading-relaxed">
+            Live telemetry and GPS tracking will automatically initialize when the next session begins.
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

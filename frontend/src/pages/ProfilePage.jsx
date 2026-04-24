@@ -28,11 +28,13 @@ const ProfilePage = () => {
     'Sergio Perez', 'Valtteri Bottas', 'Yuki Tsunoda', 'Zhou Guanyu'
   ];
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   const handleSave = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.put('http://localhost:5000/api/user/preferences', {
+      const res = await axios.put(`${API_URL}/api/user/preferences`, {
         favoriteTeam,
         favoriteDriver,
         preferences: { darkMode, displayName }
