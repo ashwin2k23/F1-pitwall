@@ -28,11 +28,12 @@ export const DRIVER_IMAGES = {
   "jack doohan": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Jack_Doohan_2023.jpg/500px-Jack_Doohan_2023.jpg",
   "gabriel bortoleto": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Gabriel_Bortoleto_%28cropped%29.jpg/500px-Gabriel_Bortoleto_%28cropped%29.jpg",
   "isack hadjar": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg/500px-Isack_Hadjar_at_the_Melbourne_Walk_during_the_2026_Australian_Grand_Prix_%28028A8753%29_%28cropped%29.jpg",
-  "daniel ricciardo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Daniel_Ricciardo_at_the_2026_Adelaide_Motorsport_Festival_%28028A7761%29_%28cropped%29.jpg/500px-Daniel_Ricciardo_at_the_2026_Adelaide_Motorsport_Festival_%28028A7761%29_%28cropped%29.jpg"
+  "daniel ricciardo": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Daniel_Ricciardo_at_the_2026_Adelaide_Motorsport_Festival_%28028A7761%29_%28cropped%29.jpg/500px-Daniel_Ricciardo_at_the_2026_Adelaide_Motorsport_Festival_%28028A7761%29_%28cropped%29.jpg",
+  "arvid lindblad": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Arvid_Lindblad_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7869%29_%28cropped%29.jpg/500px-Arvid_Lindblad_at_the_Red_Bull_Fan_Zone_%E2%80%93_Crown_Riverwalk%2C_Melbourne_%28028A7869%29_%28cropped%29.jpg"
 };
 
-// Fallback image if driver is not found
-const FALLBACK_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg/500px-2024-08-25_Motorsport%2C_Formel_1%2C_Gro%C3%9Fer_Preis_der_Niederlande_2024_STP_3973_by_Stepro_%28medium_crop%29.jpg';
+// Fallback image if driver is not found (Generic silhouette to avoid confusion)
+const FALLBACK_IMAGE = 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png';
 
 export const getDriverImage = (driverName) => {
   if (!driverName) return FALLBACK_IMAGE;

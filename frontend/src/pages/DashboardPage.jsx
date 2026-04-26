@@ -1,4 +1,5 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import RaceCalendarWidget from '../components/dashboard/RaceCalendarWidget';
 import StandingsWidget from '../components/dashboard/StandingsWidget';
@@ -12,6 +13,19 @@ const DashboardPage = () => {
   const { user } = useContext(AuthContext);
   const userName = user?.preferences?.displayName || user?.email?.split('@')[0] || 'Guest';
   const [standingsMode, setStandingsMode] = useState('drivers'); // 'drivers' | 'constructors'
+  const [raceState, setRaceState] = useState('GREEN'); // 'GREEN', 'VSC', 'SC', 'RED'
+  
+  // Fake telemetry polling
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Randomly change state occasionally for demo purposes
+      if (Math.random() > 0.95) {
+        const states = ['GREEN', 'GREEN', 'VSC', 'SC'];
+        setRaceState(states[Math.floor(Math.random() * states.length)]);
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="pt-2 pb-20">
@@ -39,16 +53,45 @@ const DashboardPage = () => {
       </div>
 
       <div className="mb-8 border-b-[3px] border-slate-900 dark:border-white pb-6">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
           <div>
-            <h1 className="text-5xl md:text-7xl font-serif text-slate-900 dark:text-white tracking-tighter">
+            <h1 className="text-5xl md:text-7xl font-serif text-slate-900 dark:text-white tracking-tighter leading-none mb-2">
               <span className="capitalize">{userName}</span>'s<br/>
               <span className="text-red-600 font-bold italic">Pit Wall.</span>
             </h1>
+            <div className="flex items-center gap-3 mt-4">
+               <span className="relative flex h-3 w-3">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+               </span>
+               <span className="text-xs font-mono font-bold text-slate-500 tracking-widest uppercase">Live Telemetry Linked</span>
+            </div>
           </div>
-          <div className="text-right flex flex-col items-end">
-             <div className="bg-red-600 text-white text-[10px] sm:text-xs font-bold px-3 py-1 uppercase tracking-widest inline-block">Live Edition</div>
-             <div className="text-[10px] sm:text-xs text-slate-500 mt-3 font-mono uppercase tracking-widest hidden sm:block">Personal Edition • F1 2026</div>
+          <div className="text-left md:text-right flex flex-col items-start md:items-end w-full md:w-auto">
+             <div className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 p-4 border-l-4 border-l-green-500 relative overflow-hidden shadow-lg min-w-[200px]">
+               <AnimatePresence mode="wait">
+                 <motion.div 
+                   key={raceState}
+                   initial={{ y: 20, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   exit={{ y: -20, opacity: 0 }}
+                   transition={{ duration: 0.3 }}
+                   className="flex flex-col"
+                 >
+                   <span className="text-[10px] text-slate-400 font-bold tracking-widest uppercase mb-1">Track Status</span>
+                   <span className={`text-2xl font-black italic tracking-tighter ${
+                     raceState === 'GREEN' ? 'text-green-500' :
+                     raceState === 'VSC' ? 'text-yellow-400' :
+                     raceState === 'SC' ? 'text-yellow-500' : 'text-red-500'
+                   }`}>
+                     {raceState === 'GREEN' ? 'CLEAR' : raceState}
+                   </span>
+                 </motion.div>
+               </AnimatePresence>
+               {raceState !== 'GREEN' && (
+                 <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-400/20 rounded-full blur-xl animate-pulse pointer-events-none"></div>
+               )}
+             </div>
           </div>
         </div>
       </div>

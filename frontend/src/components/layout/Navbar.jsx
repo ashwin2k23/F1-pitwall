@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useContext } from 'react';
+import { useState, useContext } from 'react';
 import AuthContext from '../../context/AuthContext';
-import { Flag, User as UserIcon, LogOut } from 'lucide-react';
+import { Flag, User as UserIcon, LogOut, Menu, X } from 'lucide-react';
 
 import { getDriverImage } from '../../utils/driverImages';
 import LiveTelemetryClock from '../common/LiveTelemetryClock';
@@ -11,9 +11,11 @@ const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
   const location = useLocation();
   const driverPhotoUrl = user ? getDriverImage(user?.favoriteDriver || 'Lando Norris') : null;
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const links = [
     { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Strategy Lab', path: '/strategy' },
     { name: 'Battle', path: '/battle' },
     { name: 'Highlights', path: '/highlights' },
     { name: 'News', path: '/news' },
@@ -82,7 +84,35 @@ const Navbar = () => {
             </Link>
           </div>
         )}
+        
+        {/* Mobile menu toggle */}
+        <button 
+          className="md:hidden text-slate-900 dark:text-white ml-2"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
       </div>
+
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute top-full left-0 right-0 bg-[#fcfbfa] dark:bg-[#050505] border-b-2 border-slate-900 dark:border-white py-4 px-6 flex flex-col gap-4 md:hidden z-50 shadow-2xl"
+        >
+          {links.map((link) => (
+            <Link
+              key={link.name}
+              to={link.path}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`text-sm font-bold tracking-widest uppercase py-2 border-b border-slate-200 dark:border-white/10 ${location.pathname === link.path ? 'text-red-600' : 'text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white'}`}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </motion.div>
+      )}
     </nav>
   );
 };
