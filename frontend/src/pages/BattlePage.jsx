@@ -22,6 +22,22 @@ const getDriverStats = (driverId) => {
   return base;
 };
 
+const getTeamColors = (teamName) => {
+  if (!teamName) return 'bg-gradient-to-br from-slate-700 to-slate-900 text-white';
+  const name = teamName.toLowerCase();
+  if (name.includes('mclaren')) return 'bg-gradient-to-br from-[#FF8700] to-[#E55B00] text-white';
+  if (name.includes('ferrari')) return 'bg-gradient-to-br from-[#E32219] to-[#8C0000] text-white';
+  if (name.includes('mercedes')) return 'bg-gradient-to-br from-[#00A19B] to-[#00706B] text-white';
+  if (name.includes('red bull')) return 'bg-gradient-to-br from-[#0600EF] to-[#000050] text-white';
+  if (name.includes('aston')) return 'bg-gradient-to-br from-[#006F62] to-[#004035] text-white';
+  if (name.includes('alpine')) return 'bg-gradient-to-br from-[#0090FF] to-[#0050FF] text-white';
+  if (name.includes('williams')) return 'bg-gradient-to-br from-[#005AFF] to-[#002050] text-white';
+  if (name.includes('haas')) return 'bg-gradient-to-br from-[#FFFFFF] to-[#E0E0E0] text-black';
+  if (name.includes('sauber') || name.includes('audi')) return 'bg-gradient-to-br from-[#00E701] to-[#00A000] text-black';
+  if (name.includes('rb')) return 'bg-gradient-to-br from-[#1638FA] to-[#0A1A80] text-white';
+  return 'bg-gradient-to-br from-slate-700 to-slate-900 text-white';
+};
+
 const BattlePage = () => {
   const [drivers, setDrivers] = useState([]);
   const [driver1, setDriver1] = useState(null);
@@ -86,57 +102,78 @@ const BattlePage = () => {
          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl font-serif font-bold text-slate-200 dark:text-white/5 italic z-0 pointer-events-none">VS</div>
          
          {/* Driver 1 */}
-         <div className="w-full md:w-5/12 relative z-10 flex flex-col items-center">
+         <div className="w-full md:w-5/12 relative z-10 flex flex-col">
             <select 
               value={driver1?.id} 
               onChange={e => setDriver1(drivers.find(d => d.id === e.target.value))}
-              className="bg-transparent border-b-2 border-red-600 text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 p-2 outline-none focus:bg-slate-100 dark:focus:bg-slate-900"
+              className="bg-transparent border-b-2 border-red-600 text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 p-2 outline-none focus:bg-slate-100 dark:focus:bg-slate-900 self-center md:self-start"
             >
               {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black">{d.name}</option>)}
             </select>
             
-            <div className="relative w-64 h-64">
-               <div className="absolute inset-0 bg-gradient-to-t from-red-600/20 to-transparent mix-blend-overlay"></div>
-               <img src={getDriverImage(driver1?.name)} className="w-full h-full object-cover grayscale brightness-110 contrast-125" alt={driver1?.name} />
-            </div>
-            
-            <div className="flex gap-8 mt-6">
-               <div className="text-center">
-                 <div className="text-3xl font-mono font-bold text-slate-900 dark:text-white">{driver1?.pts}</div>
-                 <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Points</div>
-               </div>
-               <div className="text-center">
-                 <div className="text-3xl font-mono font-bold text-slate-900 dark:text-white">{driver1?.wins}</div>
-                 <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Wins</div>
-               </div>
-            </div>
+            {driver1 && (
+              <div 
+                className={`relative rounded-xl overflow-hidden shadow-2xl w-full h-[320px] transition-transform ${getTeamColors(driver1.team)}`}
+              >
+                <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)', backgroundSize: '8px 8px'}}></div>
+                <div className="p-5 flex flex-col h-full relative z-10 justify-between">
+                  <div>
+                    <div className="text-lg font-bold opacity-90 drop-shadow-md leading-tight">{driver1.name.split(' ')[0]}</div>
+                    <div className="text-3xl font-black leading-none drop-shadow-md">{driver1.name.split(' ').slice(1).join(' ')}</div>
+                    <div className="text-xs mt-2 opacity-90 font-bold drop-shadow-md">{driver1.team}</div>
+                  </div>
+                  <div className="flex items-end justify-between">
+                     <div className="flex items-baseline gap-1 drop-shadow-md">
+                        <span className="text-4xl font-black">{driver1.pts}</span>
+                        <span className="text-xs font-bold uppercase">PTS</span>
+                     </div>
+                     <div className="flex items-baseline gap-1 drop-shadow-md text-right">
+                        <span className="text-4xl font-black">{driver1.wins}</span>
+                        <span className="text-xs font-bold uppercase">WINS</span>
+                     </div>
+                  </div>
+                </div>
+                <img src={getDriverImage(driver1.name)} className="absolute bottom-0 right-[-10%] h-[90%] object-contain object-bottom z-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]" alt={driver1.name} />
+              </div>
+            )}
          </div>
 
          {/* Driver 2 */}
-         <div className="w-full md:w-5/12 relative z-10 flex flex-col items-center">
+         <div className="w-full md:w-5/12 relative z-10 flex flex-col">
             <select 
               value={driver2?.id} 
               onChange={e => setDriver2(drivers.find(d => d.id === e.target.value))}
-              className="bg-transparent border-b-2 border-blue-600 text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 p-2 outline-none focus:bg-slate-100 dark:focus:bg-slate-900 text-right"
+              className="bg-transparent border-b-2 border-blue-600 text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 p-2 outline-none focus:bg-slate-100 dark:focus:bg-slate-900 self-center md:self-end text-right"
+              dir="rtl"
             >
-              {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black">{d.name}</option>)}
+              {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black" dir="ltr">{d.name}</option>)}
             </select>
             
-            <div className="relative w-64 h-64">
-               <div className="absolute inset-0 bg-gradient-to-t from-blue-600/20 to-transparent mix-blend-overlay"></div>
-               <img src={getDriverImage(driver2?.name)} className="w-full h-full object-cover grayscale brightness-110 contrast-125 transform scale-x-[-1]" alt={driver2?.name} />
-            </div>
-
-            <div className="flex gap-8 mt-6">
-               <div className="text-center">
-                 <div className="text-3xl font-mono font-bold text-slate-900 dark:text-white">{driver2?.pts}</div>
-                 <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Points</div>
-               </div>
-               <div className="text-center">
-                 <div className="text-3xl font-mono font-bold text-slate-900 dark:text-white">{driver2?.wins}</div>
-                 <div className="text-[10px] uppercase font-mono tracking-widest text-slate-500">Wins</div>
-               </div>
-            </div>
+            {driver2 && (
+              <div 
+                className={`relative rounded-xl overflow-hidden shadow-2xl w-full h-[320px] transition-transform ${getTeamColors(driver2.team)}`}
+              >
+                <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 50%)', backgroundSize: '8px 8px'}}></div>
+                <div className="p-5 flex flex-col h-full relative z-10 justify-between">
+                  <div className="text-right">
+                    <div className="text-lg font-bold opacity-90 drop-shadow-md leading-tight">{driver2.name.split(' ')[0]}</div>
+                    <div className="text-3xl font-black leading-none drop-shadow-md">{driver2.name.split(' ').slice(1).join(' ')}</div>
+                    <div className="text-xs mt-2 opacity-90 font-bold drop-shadow-md">{driver2.team}</div>
+                  </div>
+                  <div className="flex items-end justify-between flex-row-reverse">
+                     <div className="flex items-baseline gap-1 drop-shadow-md">
+                        <span className="text-4xl font-black">{driver2.pts}</span>
+                        <span className="text-xs font-bold uppercase">PTS</span>
+                     </div>
+                     <div className="flex items-baseline gap-1 drop-shadow-md text-left">
+                        <span className="text-4xl font-black">{driver2.wins}</span>
+                        <span className="text-xs font-bold uppercase">WINS</span>
+                     </div>
+                  </div>
+                </div>
+                <img src={getDriverImage(driver2.name)} className="absolute bottom-0 left-[-10%] h-[90%] object-contain object-bottom z-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] transform scale-x-[-1]" alt={driver2.name} />
+              </div>
+            )}
          </div>
       </div>
 
