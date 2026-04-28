@@ -15,8 +15,11 @@ const Navbar = () => {
 
   const links = [
     { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Live', path: '/live' },
     { name: 'Strategy Lab', path: '/strategy' },
     { name: 'Battle', path: '/battle' },
+    { name: 'Drivers', path: '/drivers' },
+    { name: 'Teams', path: '/teams' },
     { name: 'Highlights', path: '/highlights' },
     { name: 'News', path: '/news' },
     { name: 'History', path: '/history' },

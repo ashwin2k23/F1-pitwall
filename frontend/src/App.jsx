@@ -6,13 +6,18 @@ import HistoryPage from './pages/HistoryPage';
 import ProfilePage from './pages/ProfilePage';
 import LoginPage from './pages/LoginPage';
 import AuthContext, { AuthProvider } from './context/AuthContext';
-import { useContext } from 'react';
+import { useContext, Suspense, lazy } from 'react';
 
 import NewsPage from './pages/NewsPage';
 
 import BattlePage from './pages/BattlePage';
 import HighlightsPage from './pages/HighlightsPage';
 import StrategyPage from './pages/StrategyPage';
+
+// ── NEW pages (lazy-loaded for performance) ──────────────────────────────────
+const LiveDashboardPage = lazy(() => import('./pages/LiveDashboardPage'));
+const DriversPage       = lazy(() => import('./pages/DriversPage'));
+const TeamsPage         = lazy(() => import('./pages/TeamsPage'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -38,6 +43,10 @@ function App() {
               <Route path="/news" element={<NewsPage />} />
               <Route path="/history" element={<HistoryPage />} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+              {/* ── NEW routes ────────────────────────────────────────────── */}
+              <Route path="/live"    element={<Suspense fallback={null}><LiveDashboardPage /></Suspense>} />
+              <Route path="/drivers" element={<Suspense fallback={null}><DriversPage /></Suspense>} />
+              <Route path="/teams"   element={<Suspense fallback={null}><TeamsPage /></Suspense>} />
             </Routes>
           </main>
         </div>

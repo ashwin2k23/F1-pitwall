@@ -1,6 +1,15 @@
-import { Film, Play } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Film, Play, RefreshCw } from 'lucide-react';
 
-// Fallback videos in case the API is down
+// F1 Official YouTube Channel ID
+const F1_CHANNEL_ID = 'UCB_qr75-ydFVKSF9Dmo6izg';
+const YT_FEED = `https://www.youtube.com/feeds/videos.xml?channel_id=${F1_CHANNEL_ID}`;
+// Method 1: allorigins CORS proxy → YouTube's own RSS XML (most reliable, no key)
+const ALLORIGINS_URL = `https://api.allorigins.win/get?url=${encodeURIComponent(YT_FEED)}`;
+// Method 2: rss2json (secondary)
+const RSS2JSON_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(YT_FEED)}&count=12`;
+
+// Curated fallback — shown only if the live fetch fails entirely
 const FALLBACK_VIDEOS = [
   { id: 'DAl4E5fcH2E', title: 'F1 Podium Finishes — Drivers Get Progressively Younger', race: 'All Time Classic', label: 'CLASSIC' },
   { id: 'OBLYrKE_P0Q', title: '"If I Believe I\'m Good. I\'m Good." | Isack Hadjar Exclusive', race: '2026 Season', label: 'INTERVIEW' },
@@ -9,6 +18,27 @@ const FALLBACK_VIDEOS = [
   { id: '5XB2XVyvhdk', title: 'Bearman & Ocon vs The Internet — Social Media Quiz', race: '2026 Season', label: 'ENTERTAINMENT' },
   { id: 'TLAioTwTfFc', title: 'F1 Drivers Explain Tamagotchis 🤔', race: '2026 Season', label: 'ENTERTAINMENT' },
 ];
+
+// Auto-categorise video by title keywords
+const categorise = (title = '') => {
+  const t = title.toLowerCase();
+  if (t.includes('highlights') || t.includes('grand prix') || t.includes('race edit')) return 'RACE HIGHLIGHTS';
+  if (t.includes('qualifying') || t.includes('quali')) return 'QUALIFYING';
+  if (t.includes('beyond the grid') || t.includes('f1 nation') || t.includes('podcast')) return 'PODCAST';
+  if (t.includes('interview') || t.includes('exclusive')) return 'INTERVIEW';
+  if (t.includes('esport') || t.includes('virtual')) return 'ESPORTS';
+  if (t.includes('driver') || t.includes('team') || t.includes('paddock')) return 'DRIVER FEATURE';
+  return 'ENTERTAINMENT';
+};
+
+// Extract video ID from YouTube URL
+const extractId = (url = '') => {
+  try {
+    return new URL(url).searchParams.get('v') || '';
+  } catch {
+    return '';
+  }
+};
 
 const LABEL_COLORS = {
   'CLASSIC':       'bg-purple-600',
@@ -20,39 +50,101 @@ const LABEL_COLORS = {
   'RACE HIGHLIGHTS':'bg-red-600',
 };
 
-import { useState, useEffect } from 'react';
-
 const HighlightsPage = () => {
-  const [videos, setVideos] = useState(FALLBACK_VIDEOS);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isLive, setIsLive] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchVideos = async () => {
+  const fetchVideos = async (manual = false) => {
+    if (manual) setRefreshing(true);
+    else setLoading(true);
+
+    const parseXml = (xmlText) => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/youtube/latest`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data && data.length > 0) {
-             setVideos(data);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch youtube videos", error);
-      } finally {
-        setLoading(false);
-      }
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xmlText, 'text/xml');
+        const entries = Array.from(doc.querySelectorAll('entry'));
+        return entries.map((entry) => {
+          const videoId =
+            entry.getElementsByTagNameNS('http://www.youtube.com/xml/schemas/2015', 'videoId')[0]?.textContent ||
+            entry.querySelector('link')?.getAttribute('href')?.split('v=')[1] || '';
+          const title = entry.querySelector('title')?.textContent || '';
+          const published = entry.querySelector('published')?.textContent || '';
+          if (!videoId) return null;
+          const pubDate = published ? new Date(published) : null;
+          return {
+            id: videoId,
+            title,
+            race: pubDate ? pubDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '2026 Season',
+            label: categorise(title),
+          };
+        }).filter(Boolean);
+      } catch { return []; }
     };
-    
-    fetchVideos();
-  }, []);
+
+    try {
+      // Method 1: allorigins.win CORS proxy → YouTube RSS XML
+      try {
+        const res1 = await fetch(ALLORIGINS_URL);
+        if (res1.ok) {
+          const json1 = await res1.json();
+          const v1 = parseXml(json1.contents || '');
+          if (v1.length > 0) { setVideos(v1); setIsLive(true); return; }
+        }
+      } catch { /* fall through */ }
+
+      // Method 2: rss2json
+      try {
+        const res2 = await fetch(RSS2JSON_URL);
+        const d2 = await res2.json();
+        if (d2.status === 'ok' && d2.items?.length > 0) {
+          const v2 = d2.items.map((item) => {
+            const id = extractId(item.link);
+            if (!id) return null;
+            const pubDate = item.pubDate ? new Date(item.pubDate) : null;
+            return { id, title: item.title, label: categorise(item.title),
+              race: pubDate ? pubDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '2026 Season' };
+          }).filter(Boolean);
+          if (v2.length > 0) { setVideos(v2); setIsLive(true); return; }
+        }
+      } catch { /* fall through */ }
+
+      // Method 3: curated fallback
+      setVideos(FALLBACK_VIDEOS);
+      setIsLive(false);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => { fetchVideos(); }, []);
 
   return (
     <div className="pt-2 pb-20">
       {/* Header */}
       <div className="mb-12 border-b-[3px] border-slate-900 dark:border-white pb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Film className="w-5 h-5 text-red-600" />
-          <span className="text-[10px] font-mono tracking-widest uppercase text-red-600 font-bold">Official F1 Channel</span>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <Film className="w-5 h-5 text-red-600" />
+            <span className="text-[10px] font-mono tracking-widest uppercase text-red-600 font-bold">Official F1 Channel</span>
+            {isLive && (
+              <span className="flex items-center gap-1.5 text-[9px] font-mono uppercase tracking-widest text-green-500 border border-green-500/30 bg-green-500/10 px-2 py-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Live Feed
+              </span>
+            )}
+          </div>
+          <button
+            id="highlights-refresh-btn"
+            onClick={() => fetchVideos(true)}
+            disabled={loading || refreshing}
+            className="p-1.5 border border-slate-200 dark:border-slate-700 hover:border-red-600 hover:text-red-600 transition-colors text-slate-400 rounded-sm"
+            title="Refresh highlights"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
         <h1 className="text-5xl md:text-7xl font-serif text-slate-900 dark:text-white tracking-tighter">
           Race <span className="text-red-600 font-bold italic">Highlights.</span>
