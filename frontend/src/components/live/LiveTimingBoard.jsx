@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Zap } from 'lucide-react';
 import SkeletonLoader from '../ui/SkeletonLoader';
+import DriverInsightModal from './DriverInsightModal';
 import f1Api from '../../utils/f1Api';
 
 const TIRE_COLORS = {
@@ -46,6 +47,7 @@ const LiveTimingBoard = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState(null);
 
   const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
@@ -201,7 +203,8 @@ const LiveTimingBoard = () => {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: idx * 0.03, duration: 0.3 }}
-                      className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
+                      onClick={() => setSelectedDriver(row)}
+                      className="border-b border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group cursor-pointer"
                     >
                       <td className="py-3 pr-4">
                         <span className="font-mono text-xs font-bold text-slate-400 group-hover:text-red-500 transition-colors">
@@ -253,6 +256,16 @@ const LiveTimingBoard = () => {
           </div>
         )}
       </div>
+
+      {/* Driver insight modal */}
+      <AnimatePresence>
+        {selectedDriver && (
+          <DriverInsightModal
+            driver={selectedDriver}
+            onClose={() => setSelectedDriver(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
