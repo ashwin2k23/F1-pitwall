@@ -14,6 +14,27 @@ const DashboardPage = () => {
   const userName = user?.preferences?.displayName || user?.email?.split('@')[0] || 'Guest';
   const [standingsMode, setStandingsMode] = useState('drivers'); // 'drivers' | 'constructors'
   const [raceState, setRaceState] = useState('GREEN'); // 'GREEN', 'VSC', 'SC', 'RED'
+  const [nextRace, setNextRace] = useState(null);
+
+  // Fetch next race
+  useEffect(() => {
+    const fetchNextRace = async () => {
+      try {
+        const res = await fetch('https://api.jolpi.ca/ergast/f1/current.json');
+        const data = await res.json();
+        const races = data.MRData.RaceTable.Races;
+        const now = new Date();
+        const upcoming = races.find(race => {
+          const raceDate = new Date(`${race.date}T${race.time || '00:00:00Z'}`);
+          return raceDate > now;
+        });
+        setNextRace(upcoming || races[races.length - 1]);
+      } catch(err) {
+        console.error("Failed to fetch next race", err);
+      }
+    };
+    fetchNextRace();
+  }, []);
   
   // Fake telemetry polling
   useEffect(() => {
@@ -34,7 +55,7 @@ const DashboardPage = () => {
          <div className="flex whitespace-nowrap overflow-hidden">
            <div className="animate-ticker flex items-center space-x-8 text-xs font-mono tracking-widest shrink-0 px-4">
               <span>MERCEDES 135 PTS</span> <span className="text-slate-600">•</span> 
-              <span className="text-red-400">NEXT MIAMI GP - MAY 1</span> <span className="text-slate-600">•</span> 
+              <span className="text-red-400">NEXT {nextRace ? nextRace.raceName.toUpperCase() : 'RACE'} - {nextRace ? new Date(nextRace.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'TBD'}</span> <span className="text-slate-600">•</span> 
               <span>WINNER ANTONELLI - JAPAN</span> <span className="text-slate-600">•</span> 
               <span>FL RUSSELL 1:38.411</span> <span className="text-slate-600">•</span>
               <span>FASTEST PIT STOP 1.9s</span> <span className="text-slate-600">•</span>
@@ -43,7 +64,7 @@ const DashboardPage = () => {
            {/* Duplicate for seamless loop */}
            <div className="animate-ticker flex items-center space-x-8 text-xs font-mono tracking-widest shrink-0 px-4" aria-hidden>
               <span>MERCEDES 135 PTS</span> <span className="text-slate-600">•</span> 
-              <span className="text-red-400">NEXT MIAMI GP - MAY 1</span> <span className="text-slate-600">•</span> 
+              <span className="text-red-400">NEXT {nextRace ? nextRace.raceName.toUpperCase() : 'RACE'} - {nextRace ? new Date(nextRace.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase() : 'TBD'}</span> <span className="text-slate-600">•</span> 
               <span>WINNER ANTONELLI - JAPAN</span> <span className="text-slate-600">•</span> 
               <span>FL RUSSELL 1:38.411</span> <span className="text-slate-600">•</span>
               <span>FASTEST PIT STOP 1.9s</span> <span className="text-slate-600">•</span>
@@ -97,41 +118,54 @@ const DashboardPage = () => {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-[#111111] text-white p-8 md:p-12 mb-12 relative overflow-hidden flex flex-col md:flex-row justify-between items-center outline outline-1 outline-slate-800 shadow-2xl">
+      <div className="bg-[#111111] text-white p-8 md:p-12 mb-12 relative overflow-hidden flex flex-col md:flex-row justify-between items-center outline outline-1 outline-slate-800 shadow-2xl min-h-[300px]">
         {/* Subtle dot/stripe pattern overlay */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #fff 0px, transparent 1px, transparent 10px, #fff 11px)' }}></div>
         
-        <div className="relative z-10 w-full md:w-1/2 mb-8 md:mb-0 border-l-4 border-red-600 pl-6">
-           <div className="text-red-500 text-xs font-bold tracking-widest mb-4 flex items-center gap-2">
-             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
-             ROUND 04 • UP NEXT • US
-           </div>
-           <h2 className="text-4xl md:text-6xl font-serif font-bold mb-4 tracking-tight">Miami <span className="text-red-500 italic block mt-1">Grand Prix</span></h2>
-           <p className="text-sm text-gray-400 mb-6 max-w-sm leading-relaxed">Miami International Autodrome • Hard Rock Stadium<br/>Round 4 of 23 • 57 laps • 308.326 km</p>
-           
-           <div className="flex gap-12 border-t border-white/10 pt-6">
-              <div>
-                <div className="text-[10px] text-red-500/80 tracking-widest mb-1">LAP RECORD</div>
-                <div className="font-mono text-sm tracking-wide">1:29.708</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-red-500/80 tracking-widest mb-1">POLE 2026</div>
-                <div className="font-mono text-sm tracking-wide">M. Verstappen</div>
-              </div>
-              <div>
-                <div className="text-[10px] text-red-500/80 tracking-widest mb-1">DATES</div>
-                <div className="font-mono text-sm tracking-wide">MAY 1 - MAY 3</div>
-              </div>
-           </div>
-        </div>
+        {nextRace ? (
+          <>
+            <div className="relative z-10 w-full md:w-1/2 mb-8 md:mb-0 border-l-4 border-red-600 pl-6">
+               <div className="text-red-500 text-xs font-bold tracking-widest mb-4 flex items-center gap-2">
+                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></span>
+                 ROUND {String(nextRace.round).padStart(2, '0')} • UP NEXT • {nextRace.Circuit.Location.country.toUpperCase()}
+               </div>
+               <h2 className="text-4xl md:text-6xl font-serif font-bold mb-4 tracking-tight">
+                 {nextRace.raceName.split(' ')[0]} <span className="text-red-500 italic block mt-1">{nextRace.raceName.split(' ').slice(1).join(' ')}</span>
+               </h2>
+               <p className="text-sm text-gray-400 mb-6 max-w-sm leading-relaxed">
+                 {nextRace.Circuit.circuitName} • {nextRace.Circuit.Location.locality}<br/>
+                 Round {nextRace.round} of 24
+               </p>
+               
+               <div className="flex gap-12 border-t border-white/10 pt-6">
+                  <div>
+                    <div className="text-[10px] text-red-500/80 tracking-widest mb-1">CIRCUIT ID</div>
+                    <div className="font-mono text-sm tracking-wide">{nextRace.Circuit.circuitId.toUpperCase()}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-red-500/80 tracking-widest mb-1">DATE</div>
+                    <div className="font-mono text-sm tracking-wide">{nextRace.date.split('-').slice(1).join('/')}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-red-500/80 tracking-widest mb-1">TIME</div>
+                    <div className="font-mono text-sm tracking-wide">{nextRace.time ? nextRace.time.replace('Z', ' UTC') : 'TBD'}</div>
+                  </div>
+               </div>
+            </div>
 
-        <div className="relative z-10 mt-6 md:mt-0">
-           <div className="flex items-center gap-2 mb-3">
-             <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-             <div className="text-[10px] text-red-500 tracking-widest font-bold">LIGHTS OUT IN</div>
-           </div>
-           <CountdownTimer targetDate="2026-05-01T15:00:00Z" />
-        </div>
+            <div className="relative z-10 mt-6 md:mt-0">
+               <div className="flex items-center gap-2 mb-3">
+                 <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                 <div className="text-[10px] text-red-500 tracking-widest font-bold">LIGHTS OUT IN</div>
+               </div>
+               <CountdownTimer targetDate={`${nextRace.date}T${nextRace.time || '00:00:00Z'}`} />
+            </div>
+          </>
+        ) : (
+          <div className="relative z-10 flex w-full items-center justify-center">
+            <div className="text-slate-500 text-sm py-4 animate-pulse">Syncing FIA Calendar...</div>
+          </div>
+        )}
       </div>
 
       {/* Grid */}
