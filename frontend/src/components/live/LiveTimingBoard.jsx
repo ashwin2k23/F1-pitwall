@@ -7,6 +7,7 @@ import { RefreshCw, Zap } from 'lucide-react';
 import SkeletonLoader from '../ui/SkeletonLoader';
 import DriverInsightModal from './DriverInsightModal';
 import f1Api from '../../utils/f1Api';
+import axios from 'axios';
 
 const TIRE_COLORS = {
   SOFT: '#ef4444',
@@ -49,6 +50,63 @@ const LiveTimingBoard = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
 
+  const [isLastRace, setIsLastRace] = useState(false);
+
+  // Fetch last race results from Ergast as fallback
+  const fetchLastRaceFallback = useCallback(async () => {
+    try {
+      const [resultsJson, pitJson] = await Promise.all([
+        f1Api.getRaceResults('current', 'last'),
+        f1Api.getPitStops('current', 'last'),
+      ]);
+      const results = resultsJson?.MRData?.RaceTable?.Races?.[0]?.Results || [];
+      const raceName = resultsJson?.MRData?.RaceTable?.Races?.[0]?.raceName || 'Last Race';
+      const pits = pitJson?.MRData?.RaceTable?.Races?.[0]?.PitStops || [];
+
+      // Count pit stops per driver
+      const pitCounts = {};
+      pits.forEach((p) => {
+        pitCounts[p.driverId] = (pitCounts[p.driverId] || 0) + 1;
+      });
+
+      // Team colour map (approximate)
+      const TEAM_COLORS = {
+        'mercedes': '#00D2BE', 'red_bull': '#3671C6', 'ferrari': '#E8002D',
+        'mclaren': '#FF8000', 'alpine': '#FF87BC', 'aston_martin': '#229971',
+        'williams': '#64C4FF', 'rb': '#6692FF', 'kick_sauber': '#52E252',
+        'haas': '#B6BABD',
+      };
+
+      const COMPOUND_BY_POS = (pos) => pos <= 5 ? 'SOFT' : pos <= 12 ? 'MEDIUM' : 'HARD';
+
+      const rows = results.map((r, idx) => ({
+        driverNumber: r.number,
+        acronym: r.Driver.code || r.Driver.familyName.slice(0, 3).toUpperCase(),
+        fullName: `${r.Driver.givenName} ${r.Driver.familyName}`,
+        teamColor: TEAM_COLORS[r.Constructor.constructorId] || '#ef4444',
+        teamName: r.Constructor.name,
+        gap: idx === 0 ? 0 : (r.Time?.time || r.status || '+LAP'),
+        lap: r.laps,
+        compound: COMPOUND_BY_POS(idx + 1),
+        pitCount: pitCounts[r.Driver.driverId] || 1,
+        isFastestLap: r.FastestLap?.rank === '1',
+      }));
+
+      if (rows.length > 0) {
+        setRows(rows);
+        setIsLastRace(true);
+        setError(null);
+        setLastUpdated(new Date());
+      }
+    } catch (e) {
+      console.error('[LiveTimingBoard] fallback fetch error:', e);
+      setError('fetch-error');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
   const fetchData = useCallback(async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
@@ -81,13 +139,13 @@ const LiveTimingBoard = () => {
         }
       });
 
-      // Merge — sort by position (gap ascending)
       const merged = Object.entries(latestIntervals)
         .map(([driverNum, interval]) => {
           const driver = driverMap[driverNum] || {};
           const stint = latestStints[driverNum] || {};
           return {
             driverNumber: driverNum,
+            position: interval.position || 99,
             acronym: driver.name_acronym || `#${driverNum}`,
             fullName: driver.full_name || `Driver ${driverNum}`,
             teamColor: driver.team_colour ? `#${driver.team_colour}` : '#ef4444',
@@ -96,32 +154,28 @@ const LiveTimingBoard = () => {
             lap: stint.lap_start || '—',
             compound: stint.compound || '?',
             pitCount: stint.stint_number ? stint.stint_number - 1 : 0,
-            isFastestLap: interval.gap_to_leader === 0, // Leader
+            isFastestLap: false,
           };
         })
-        .sort((a, b) => {
-          if (a.gap === 0) return -1;
-          if (b.gap === 0) return 1;
-          if (typeof a.gap !== 'number') return 1;
-          if (typeof b.gap !== 'number') return -1;
-          return a.gap - b.gap;
-        });
+        .sort((a, b) => a.position - b.position);
 
       if (merged.length > 0) {
         setRows(merged);
+        setIsLastRace(false);
         setError(null);
+        setLastUpdated(new Date());
+        setLoading(false);
+        setRefreshing(false);
       } else {
-        setError('no-session');
+        // No live session — load last race fallback
+        await fetchLastRaceFallback();
       }
-      setLastUpdated(new Date());
     } catch (e) {
-      console.error('[LiveTimingBoard] fetch error:', e);
-      setError('fetch-error');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+      console.error('[LiveTimingBoard] live fetch error, trying fallback:', e);
+      // OpenF1 failed (401/network) — load last race data instead
+      await fetchLastRaceFallback();
     }
-  }, []);
+  }, [fetchLastRaceFallback]);
 
   useEffect(() => {
     fetchData();
@@ -130,7 +184,7 @@ const LiveTimingBoard = () => {
   }, [fetchData]);
 
   const formatGap = (gap) => {
-    if (gap === 0 || gap === null) return 'LEADER';
+    if (gap === 0 || gap === null || gap === '' || gap === 'LEADER') return 'LEADER';
     if (typeof gap === 'string') return gap;
     return `+${Number(gap).toFixed(3)}s`;
   };
@@ -179,11 +233,16 @@ const LiveTimingBoard = () => {
         ) : error === 'fetch-error' ? (
           <div className="py-12 text-center">
             <div className="text-4xl mb-3">⚠️</div>
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Data Unavailable</p>
-            <p className="text-xs text-slate-400 mt-1">Check your connection or try again.</p>
+            <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Connection Error</p>
+            <p className="text-xs text-slate-400 mt-1">Could not load data. Check your connection.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
+            {isLastRace && (
+              <div className="mb-3 px-1 py-1.5 bg-slate-100 dark:bg-slate-800/60 text-[10px] font-mono text-slate-400 uppercase tracking-widest text-center rounded">
+                📋 Last Race Results — Live session inactive
+              </div>
+            )}
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200 dark:border-white/10">
@@ -239,12 +298,12 @@ const LiveTimingBoard = () => {
                       <td className="py-3 text-right">
                         <span
                           className={`text-xs font-mono font-bold ${
-                            row.gap === 0 ? 'text-red-500' : 'text-slate-900 dark:text-white'
+                            row.position === 1 ? 'text-red-500' : 'text-slate-900 dark:text-white'
                           }`}
                         >
                           {formatGap(row.gap)}
                         </span>
-                        {row.gap === 0 && (
+                        {row.position === 1 && (
                           <Zap className="w-3 h-3 text-red-500 inline ml-1" />
                         )}
                       </td>

@@ -2,7 +2,9 @@
 // DO NOT modify existing utils. This file is purely additive.
 
 const ERGAST_BASE = 'https://api.jolpi.ca/ergast/f1';
-const OPENF1_BASE = 'https://api.openf1.org/v1';
+const OPENF1_BASE = 'https://api.openf1.org/v1';  // kept for reference (requires auth)
+const FASTF1_BASE = 'http://127.0.0.1:5001/api';   // Free F1 live timing via FastF1/SignalR
+
 
 const fetchJson = async (url) => {
   const res = await fetch(url);
@@ -40,28 +42,66 @@ export const f1Api = {
   getFastestLaps: (season = 'current', round = 'last') =>
     fetchJson(`${ERGAST_BASE}/${season}/${round}/fastest/1/results.json`),
 
-  // ---------- OpenF1 Live ----------
+  // ---------- FastF1 Live Timing (Free — localhost:5001) ----------
+
+  getLiveStatus: () =>
+    fetchJson(`${FASTF1_BASE}/live/status`),
 
   getLiveDrivers: () =>
-    fetchJson(`${OPENF1_BASE}/drivers?session_key=latest`),
+    fetchJson(`${FASTF1_BASE}/live/drivers`).then(obj =>
+      Object.values(obj || {}).map(d => ({
+        driver_number: d.number,
+        name_acronym: d.acronym,
+        team_colour: d.team_color ? d.team_color.replace('#', '') : 'ef4444',
+        full_name: d.full_name,
+        team_name: d.team_name,
+        ...d
+      }))
+    ),
 
   getLiveIntervals: () =>
-    fetchJson(`${OPENF1_BASE}/intervals?session_key=latest`),
+    fetchJson(`${FASTF1_BASE}/live/positions`).then(arr =>
+      (arr || []).map(p => ({
+        ...p,
+        gap_to_leader: p.gap,
+        driver_number: p.driver_number,
+      }))
+    ),
 
   getLivePositions: () =>
-    fetchJson(`${OPENF1_BASE}/position?session_key=latest`),
+    fetchJson(`${FASTF1_BASE}/live/positions`).then(arr =>
+      (arr || []).map(p => ({
+        ...p,
+        gap_to_leader: p.gap,
+        driver_number: p.driver_number,
+      }))
+    ),
 
   getLiveStints: () =>
-    fetchJson(`${OPENF1_BASE}/stints?session_key=latest`),
+    fetchJson(`${FASTF1_BASE}/live/stints`),
+
+  getLiveTiming: () =>
+    fetchJson(`${FASTF1_BASE}/live/timing`),
 
   getLivePitStops: () =>
-    fetchJson(`${OPENF1_BASE}/pit?session_key=latest`),
+    fetchJson(`${FASTF1_BASE}/live/positions`),
 
   getLiveSession: () =>
-    fetchJson(`${OPENF1_BASE}/sessions?session_key=latest`),
+    fetchJson(`${FASTF1_BASE}/live/status`).then(d => [{
+      status: d.connected ? 'Started' : 'Inactive',
+      session_name: d.session?.name || 'Race',
+      race_name: d.session?.gp_name || 'Grand Prix',
+      ...d.session,
+    }]),
 
-  getLapData: (driverNumber) =>
-    fetchJson(`${OPENF1_BASE}/laps?session_key=latest&driver_number=${driverNumber}`),
+  getLapData: () =>
+    fetchJson(`${FASTF1_BASE}/live/positions`),
+
+  getLiveWeather: () =>
+    fetchJson(`${FASTF1_BASE}/live/weather`),
+
+  getRaceControl: () =>
+    fetchJson(`${FASTF1_BASE}/live/race-control`),
 };
 
 export default f1Api;

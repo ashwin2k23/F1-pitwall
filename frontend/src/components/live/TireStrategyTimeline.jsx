@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { TimelineSkeleton } from '../ui/SkeletonLoader';
 import f1Api from '../../utils/f1Api';
 
+
 const COMPOUND_COLORS = {
   SOFT: { bg: '#ef4444', label: 'S', text: '#fff' },
   MEDIUM: { bg: '#f59e0b', label: 'M', text: '#111' },
@@ -22,6 +23,67 @@ const TireStrategyTimeline = ({ totalLaps = 57 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [isLastRace, setIsLastRace] = useState(false);
+
+  const TEAM_COLORS = {
+    'mercedes': '#00D2BE', 'red_bull': '#3671C6', 'ferrari': '#E8002D',
+    'mclaren': '#FF8000', 'alpine': '#FF87BC', 'aston_martin': '#229971',
+    'williams': '#64C4FF', 'rb': '#6692FF', 'kick_sauber': '#52E252', 'haas': '#B6BABD',
+  };
+
+  // Fallback: reconstruct stints from Ergast last race pit stops
+  const fetchLastRaceFallback = useCallback(async () => {
+    try {
+      const [resultsJson, pitJson] = await Promise.all([
+        f1Api.getRaceResults('current', 'last'),
+        f1Api.getPitStops('current', 'last'),
+      ]);
+      const results = resultsJson?.MRData?.RaceTable?.Races?.[0]?.Results || [];
+      const pits = pitJson?.MRData?.RaceTable?.Races?.[0]?.PitStops || [];
+      const laps = parseInt(results[0]?.laps || totalLaps);
+
+      // Group pit stops by driverId
+      const pitsByDriver = {};
+      pits.forEach((p) => {
+        if (!pitsByDriver[p.driverId]) pitsByDriver[p.driverId] = [];
+        pitsByDriver[p.driverId].push(parseInt(p.lap));
+      });
+
+      // Build driver lookup from results
+      const rows = results.slice(0, 15).map((r) => {
+        const driverId = r.Driver.driverId;
+        const pitLaps = (pitsByDriver[driverId] || []).sort((a, b) => a - b);
+        const COMPOUNDS = ['SOFT', 'MEDIUM', 'HARD'];
+
+        // Build stints from pit lap boundaries
+        const boundaries = [1, ...pitLaps, laps];
+        const stints = boundaries.slice(0, -1).map((start, i) => ({
+          compound: COMPOUNDS[i % COMPOUNDS.length],
+          lapStart: start,
+          lapEnd: boundaries[i + 1] - (i < boundaries.length - 2 ? 1 : 0),
+        }));
+
+        return {
+          driverNumber: r.number,
+          acronym: r.Driver.code || r.Driver.familyName.slice(0, 3).toUpperCase(),
+          teamColor: TEAM_COLORS[r.Constructor.constructorId] || '#ef4444',
+          stints,
+        };
+      });
+
+      if (rows.length > 0) {
+        setDriverStints(rows);
+        setIsLastRace(true);
+        setError(null);
+      }
+    } catch (e) {
+      console.error('[TireStrategyTimeline] fallback error:', e);
+      setError('fetch-error');
+    } finally {
+      setLoading(false);
+    }
+  }, [totalLaps]);
+
   const fetchStints = useCallback(async () => {
     try {
       const [stintsData, driversData] = await Promise.all([
@@ -34,7 +96,6 @@ const TireStrategyTimeline = ({ totalLaps = 57 }) => {
         driverMap[d.driver_number] = d;
       });
 
-      // Group stints by driver
       const byDriver = {};
       (stintsData || []).forEach((s) => {
         if (!byDriver[s.driver_number]) byDriver[s.driver_number] = [];
@@ -58,17 +119,18 @@ const TireStrategyTimeline = ({ totalLaps = 57 }) => {
 
       if (rows.length > 0) {
         setDriverStints(rows);
+        setIsLastRace(false);
         setError(null);
       } else {
-        setError('no-session');
+        await fetchLastRaceFallback();
       }
     } catch (e) {
-      console.error('[TireStrategyTimeline] fetch error:', e);
-      setError('fetch-error');
+      console.error('[TireStrategyTimeline] live fetch error, trying fallback:', e);
+      await fetchLastRaceFallback();
     } finally {
       setLoading(false);
     }
-  }, [totalLaps]);
+  }, [totalLaps, fetchLastRaceFallback]);
 
   useEffect(() => {
     fetchStints();
@@ -81,9 +143,9 @@ const TireStrategyTimeline = ({ totalLaps = 57 }) => {
   if (error) {
     return (
       <div className="py-10 text-center">
-        <div className="text-3xl mb-2">🏎️</div>
+        <div className="text-3xl mb-2">⚠️</div>
         <p className="text-xs font-mono uppercase tracking-widest text-slate-400">
-          {error === 'no-session' ? 'Awaiting live session for tire data' : 'Tire data unavailable'}
+          Could not load tire data
         </p>
       </div>
     );
@@ -91,6 +153,11 @@ const TireStrategyTimeline = ({ totalLaps = 57 }) => {
 
   return (
     <div className="space-y-3" id="tire-strategy-timeline">
+      {isLastRace && (
+        <div className="mb-3 px-1 py-1.5 bg-slate-100 dark:bg-slate-800/60 text-[10px] font-mono text-slate-400 uppercase tracking-widest text-center rounded">
+          📋 Last Race Strategy — Live session inactive
+        </div>
+      )}
       {/* Legend */}
       <div className="flex flex-wrap gap-3 mb-4">
         {Object.entries(COMPOUND_COLORS).filter(([k]) => k !== 'UNKNOWN').map(([compound, style]) => (

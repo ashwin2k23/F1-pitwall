@@ -33,11 +33,63 @@ const LiveDashboardPage = () => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    f1Api.getLiveSession()
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) setSession(data[0]);
-      })
-      .catch(() => {});
+    const detectSession = async () => {
+      // --- Primary: check Ergast schedule for active race weekend ---
+      try {
+        const res = await fetch('https://api.jolpi.ca/ergast/f1/current.json');
+        const data = await res.json();
+        const races = data?.MRData?.RaceTable?.Races || [];
+        const now = new Date();
+        // Use LOCAL date (not UTC) — toISOString() gives wrong date for UTC+5:30 users
+        const pad = (n) => String(n).padStart(2, '0');
+        const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+        for (const race of races) {
+          // Collect all session dates for this race weekend
+          const sessionDates = [
+            race.FirstPractice?.date,
+            race.SecondPractice?.date,
+            race.ThirdPractice?.date,
+            race.Sprint?.date,
+            race.SprintQualifying?.date,
+            race.Qualifying?.date,
+            race.date,
+          ].filter(Boolean);
+
+          // Is today within this race weekend?
+          if (sessionDates.includes(todayStr)) {
+            // Determine which session is today
+            let sessionName = 'Race Weekend';
+            if (race.date === todayStr) sessionName = 'Race';
+            else if (race.Qualifying?.date === todayStr) sessionName = 'Qualifying';
+            else if (race.Sprint?.date === todayStr) sessionName = 'Sprint';
+            else if (race.ThirdPractice?.date === todayStr) sessionName = 'Practice 3';
+            else if (race.SecondPractice?.date === todayStr) sessionName = 'Practice 2';
+            else if (race.FirstPractice?.date === todayStr) sessionName = 'Practice 1';
+
+            setSession({
+              status: 'Started',
+              session_name: sessionName,
+              race_name: race.raceName,
+              circuit: race.Circuit?.circuitName,
+            });
+            return; // Found — no need to check further
+          }
+        }
+      } catch (e) {
+        console.warn('[LiveDashboardPage] Ergast schedule check failed:', e);
+      }
+
+      // --- Secondary: try OpenF1 (requires auth, best-effort) ---
+      try {
+        const data = await f1Api.getLiveSession();
+        if (Array.isArray(data) && data.length > 0 && data[0].status === 'Started') {
+          setSession(data[0]);
+        }
+      } catch (_) {}
+    };
+
+    detectSession();
   }, []);
 
   return (
@@ -69,9 +121,27 @@ const LiveDashboardPage = () => {
         >
           <Radio className="w-4 h-4 mt-0.5 flex-shrink-0" />
           <p className="text-xs font-mono leading-relaxed">
-            No live session is currently active. The timing board and tire timeline will populate automatically 
-            when a race, qualifying, or practice session begins. Race insights below are sourced from the most 
-            recent completed race.
+            No race weekend scheduled today. Timing board and tire strategy show last race results.
+            Live data activates automatically on race weekends.
+          </p>
+        </motion.div>
+      )}
+
+      {/* Live session banner */}
+      {session?.status === 'Started' && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 flex items-start gap-3 p-4 border border-red-500/30 bg-red-500/5 text-red-400"
+        >
+          <span className="relative flex h-3 w-3 mt-0.5 flex-shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+          </span>
+          <p className="text-xs font-mono leading-relaxed">
+            <span className="font-bold uppercase tracking-widest">🔴 Live Session Active</span>{' — '}
+            {session.race_name} · {session.session_name}
+            {session.circuit && ` · ${session.circuit}`}
           </p>
         </motion.div>
       )}
