@@ -7,72 +7,80 @@
 
 @layer base {
   :root {
-    --background: #fcfbfa; /* Warm editorial cream */
-    --text-color: #111111;
-    --card-bg: #ffffff;
+    --background: #090d16; /* F1 Motorsport Carbon Slate */
+    --text-color: #f1f5f9;
+    --card-bg: #131a26;
   }
 
   .dark {
-    --background: #050505; /* Deep editorial ink */
-    --text-color: #f5f5f5;
-    --card-bg: #111111;
+    --background: #05070c; /* Deep F1 Pit Ink */
+    --text-color: #ffffff;
+    --card-bg: #0b0f17;
   }
 
   body {
     @apply bg-background text-[var(--text-color)] antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
+    /* Motorsport background carbon grids */
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 32px 32px;
   }
 }
 
 @layer components {
   .glass-panel {
-    @apply bg-white dark:bg-[rgba(255,255,255,0.05)] backdrop-blur-xl border border-slate-200 dark:border-[rgba(255,255,255,0.1)] shadow-sm dark:shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] rounded-2xl;
+    @apply bg-[#131a26]/75 backdrop-blur-xl border border-slate-800 shadow-[0_12px_40px_rgba(0,0,0,0.5)] rounded-lg relative overflow-hidden;
+    /* Telemetry grid paper pattern inside cards */
+    background-image: radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0);
+    background-size: 16px 16px;
   }
 
   .editorial-border {
-    @apply border-t-2 border-slate-900 dark:border-white;
+    @apply border-t-[3px] border-red-600;
   }
   
   .editorial-card {
-    @apply bg-transparent py-4 border-t border-slate-200 dark:border-white/10;
+    @apply bg-transparent py-4 border-t border-slate-800;
   }
   
   .primary-gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-blue-500 to-cyan-500;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500;
   }
 
   .input-field {
-    @apply w-full bg-slate-100 dark:bg-black/20 border border-slate-300 dark:border-white/10 rounded-lg px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-red-600/50 transition-all;
+    @apply w-full bg-black/45 border border-slate-800 rounded px-4 py-2.5 text-white font-mono text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-red-600 transition-all;
   }
 
   .primary-button {
-    @apply px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium transition-all duration-300;
+    @apply px-5 py-2.5 rounded bg-red-600 hover:bg-red-700 text-white font-mono font-bold text-xs uppercase tracking-widest transition-all duration-300 -skew-x-12 inline-block text-center shadow-lg hover:shadow-red-600/25;
   }
 }
 
-/* Custom Scrollbar for sleekness */
+/* Custom Scrollbar styled as an F1 carbon track */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #05070c;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.35); /* Glow Red */
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(239, 68, 68, 0.6);
 }
 
 @keyframes tickerMarquee {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(0); }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 .animate-ticker {
-  animation: tickerMarquee 30s linear infinite !important;
+  animation: tickerMarquee 25s linear infinite !important;
 }

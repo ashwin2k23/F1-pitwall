@@ -12,13 +12,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+const http = require('http');
+const WebSocket = require('ws');
+
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const fantasyRoutes = require('./routes/fantasyRoutes');
 
 // Use Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/fantasy', fantasyRoutes);
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'F1 PitWall backend is running' });
@@ -59,6 +64,50 @@ app.get('/api/youtube/latest', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// Create HTTP server wrapping Express
+const server = http.createServer(app);
+
+// Initialize WebSocket server
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+    console.log('🔌 Client connected to Pitwall Live Telemetry WebSocket');
+    ws.send(JSON.stringify({ type: 'STATUS', message: 'TELEMETRY_LINKED' }));
+    
+    ws.on('close', () => {
+        console.log('🔌 Client disconnected');
+    });
+});
+
+// Telemetry Broadcast Ticker
+const ACRONYMS = ['VER', 'NOR', 'LEC', 'PIA', 'SAI', 'HAM', 'RUS', 'PER', 'ALO', 'TSU', 'ALB', 'GAS', 'OCO', 'HUL', 'STR', 'MAG', 'BOT', 'ZHO', 'SAR'];
+const SECTOR_LABELS = ['Sector 1', 'Sector 2', 'Sector 3'];
+
+setInterval(() => {
+    if (wss.clients.size > 0) {
+        const acronym = ACRONYMS[Math.floor(Math.random() * ACRONYMS.length)];
+        const sectorNum = Math.floor(Math.random() * 3) + 1;
+        const sectorTime = (12 + Math.random() * 20).toFixed(3);
+        
+        // Broadcast telemetry ticks
+        const payload = JSON.stringify({
+            type: 'TELEMETRY_TICK',
+            acronym,
+            sector: sectorNum,
+            time: sectorTime,
+            status: Math.random() > 0.85 ? 'PURPLE' : Math.random() > 0.5 ? 'GREEN' : 'YELLOW',
+            gapDelta: (Math.random() * 0.18 - 0.09).toFixed(3),
+            speedTrap: Math.floor(305 + Math.random() * 38)
+        });
+
+        wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(payload);
+            }
+        });
+    }
+}, 3000);
+
+server.listen(PORT, () => {
     console.log(`✅ Server listening on port ${PORT}`);
 });

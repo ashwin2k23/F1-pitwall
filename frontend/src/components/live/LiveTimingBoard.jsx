@@ -49,6 +49,7 @@ const LiveTimingBoard = () => {
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
+  const [flashDrivers, setFlashDrivers] = useState({});
 
   const [isLastRace, setIsLastRace] = useState(false);
 
@@ -180,7 +181,67 @@ const LiveTimingBoard = () => {
   useEffect(() => {
     fetchData();
     const timer = setInterval(() => fetchData(), 15000);
-    return () => clearInterval(timer);
+
+    // Setup Live Telemetry WebSocket
+    let ws = null;
+    let reconnectTimeout = null;
+
+    const connectWs = () => {
+      try {
+        const wsUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/^http/, 'ws');
+        ws = new WebSocket(wsUrl);
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'TELEMETRY_TICK') {
+              const { acronym, sector, time, status, gapDelta, speedTrap } = data;
+              
+              // 1. Highlight sector flash
+              setFlashDrivers(prev => ({
+                ...prev,
+                [acronym]: { sector, status, time, speedTrap, timestamp: Date.now() }
+              }));
+
+              // 2. Adjust rows array properties live
+              setRows(prevRows => {
+                let updated = prevRows.map(row => {
+                  if (row.acronym === acronym || (acronym === 'VER' && row.acronym === 'VES')) {
+                    let newGap = row.gap;
+                    if (typeof row.gap === 'number') {
+                      newGap = Math.max(0, row.gap + parseFloat(gapDelta));
+                    }
+                    return {
+                      ...row,
+                      gap: newGap,
+                      speedTrap
+                    };
+                  }
+                  return row;
+                });
+                return updated;
+              });
+            }
+          } catch (e) {
+            console.warn('[LiveTimingBoard WS message err]', e);
+          }
+        };
+
+        ws.onclose = () => {
+          reconnectTimeout = setTimeout(connectWs, 5000);
+        };
+      } catch (err) {
+        console.warn('[LiveTimingBoard WS err]', err);
+      }
+    };
+
+    connectWs();
+
+    return () => {
+      if (ws) ws.close();
+      clearTimeout(reconnectTimeout);
+      clearInterval(timer);
+    };
   }, [fetchData]);
 
   const formatGap = (gap) => {
@@ -276,11 +337,32 @@ const LiveTimingBoard = () => {
                             className="w-1 h-8 rounded-full flex-shrink-0"
                             style={{ backgroundColor: row.teamColor }}
                           />
-                          <div>
-                            <div className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-red-600 transition-colors leading-none">
-                              {row.acronym}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white text-sm group-hover:text-red-500 transition-colors leading-none">
+                                {row.acronym}
+                              </span>
+                              {flashDrivers[row.acronym] && (Date.now() - flashDrivers[row.acronym].timestamp < 2500) && (
+                                <motion.span
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  exit={{ opacity: 0 }}
+                                  className={`text-[9px] px-1 font-mono font-bold rounded tracking-tight text-white ${
+                                    flashDrivers[row.acronym].status === 'PURPLE' ? 'bg-purple-600 shadow-[0_0_8px_rgba(168,85,247,0.5)]' :
+                                    flashDrivers[row.acronym].status === 'GREEN' ? 'bg-green-600 shadow-[0_0_8px_rgba(34,197,94,0.5)]' :
+                                    'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]'
+                                  }`}
+                                >
+                                  S{flashDrivers[row.acronym].sector} ({flashDrivers[row.acronym].time}s)
+                                </motion.span>
+                              )}
+                              {row.speedTrap && (
+                                <span className="text-[9px] font-mono text-slate-400 bg-slate-800/40 px-1.5 py-0.5 rounded hidden lg:inline">
+                                  {row.speedTrap} km/h
+                                </span>
+                              )}
                             </div>
-                            <div className="text-[10px] font-mono text-slate-400 leading-none mt-0.5 hidden sm:block">
+                            <div className="text-[10px] font-mono text-slate-400 leading-none mt-1 hidden sm:block">
                               {row.fullName}
                             </div>
                           </div>

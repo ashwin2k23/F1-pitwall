@@ -11,6 +11,7 @@ import { useContext, Suspense, lazy } from 'react';
 import NewsPage from './pages/NewsPage';
 
 import BattlePage from './pages/BattlePage';
+import FantasyPage from './pages/FantasyPage';
 import HighlightsPage from './pages/HighlightsPage';
 import StrategyPage from './pages/StrategyPage';
 
@@ -38,6 +39,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/battle" element={<ProtectedRoute><BattlePage /></ProtectedRoute>} />
+              <Route path="/fantasy" element={<ProtectedRoute><FantasyPage /></ProtectedRoute>} />
               <Route path="/strategy" element={<ProtectedRoute><StrategyPage /></ProtectedRoute>} />
               <Route path="/highlights" element={<HighlightsPage />} />
               <Route path="/news" element={<NewsPage />} />

@@ -103,13 +103,13 @@ const BattlePage = () => {
          
          {/* Driver 1 */}
          <div className="w-full md:w-5/12 relative z-10 flex flex-col">
-            <select 
-              value={driver1?.id} 
-              onChange={e => setDriver1(drivers.find(d => d.id === e.target.value))}
-              className="bg-transparent border-b-2 border-red-600 text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 p-2 outline-none focus:bg-slate-100 dark:focus:bg-slate-900 self-center md:self-start"
-            >
-              {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black">{d.name}</option>)}
-            </select>
+             <select 
+               value={driver1?.id} 
+               onChange={e => setDriver1(drivers.find(d => d.id === e.target.value))}
+               className="bg-black/60 border border-slate-800 text-lg font-mono font-bold text-white mb-6 p-2 rounded outline-none focus:border-red-650 focus:ring-1 focus:ring-red-650 self-center md:self-start w-full max-w-[280px]"
+             >
+               {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black bg-white">{d.name}</option>)}
+             </select>
             
             {driver1 && (
               <div 
@@ -140,14 +140,14 @@ const BattlePage = () => {
 
          {/* Driver 2 */}
          <div className="w-full md:w-5/12 relative z-10 flex flex-col">
-            <select 
-              value={driver2?.id} 
-              onChange={e => setDriver2(drivers.find(d => d.id === e.target.value))}
-              className="bg-transparent border-b-2 border-blue-600 text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 p-2 outline-none focus:bg-slate-100 dark:focus:bg-slate-900 self-center md:self-end text-right"
-              dir="rtl"
-            >
-              {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black" dir="ltr">{d.name}</option>)}
-            </select>
+             <select 
+               value={driver2?.id} 
+               onChange={e => setDriver2(drivers.find(d => d.id === e.target.value))}
+               className="bg-black/60 border border-slate-800 text-lg font-mono font-bold text-white mb-6 p-2 rounded outline-none focus:border-red-650 focus:ring-1 focus:ring-red-650 self-center md:self-end w-full max-w-[280px]"
+               dir="rtl"
+             >
+               {drivers.map(d => <option key={d.id} value={d.id} className="text-base text-black bg-white" dir="ltr">{d.name}</option>)}
+             </select>
             
             {driver2 && (
               <div 
@@ -181,7 +181,7 @@ const BattlePage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 mt-12">
          <div>
             <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white tracking-tight mb-8">Performance <span className="text-red-600 italic">Radar</span></h3>
-            <div className="editorial-border h-[400px] flex items-center justify-center p-4">
+             <div className="glass-panel h-[400px] flex items-center justify-center p-4">
                <ResponsiveContainer width="100%" height="100%">
                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                    <PolarGrid stroke="#475569" strokeDasharray="3 3" />
@@ -198,7 +198,7 @@ const BattlePage = () => {
          {/* Progression Graph */}
          <div>
             <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white tracking-tight mb-8">Championship <span className="text-red-600 italic">Progression</span></h3>
-            <div className="editorial-border h-[400px] p-6">
+             <div className="glass-panel h-[400px] p-6">
                <ResponsiveContainer width="100%" height="100%">
                  <LineChart data={progressionData}>
                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />

@@ -44,6 +44,105 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
+const MonacoCircuitMap = ({ pitLap, setPitLap }) => {
+  const circuits = {
+    Monaco: {
+      name: "Monaco",
+      path: "M 50,75 C 60,30 90,20 120,40 C 150,60 170,40 200,60 C 230,80 250,50 270,90 C 280,110 260,130 220,120 C 180,110 150,130 110,120 C 70,110 40,110 50,75 Z",
+      length: "3.337 km",
+      record: "1:14.260 (Lewis Hamilton)"
+    },
+    Silverstone: {
+      name: "Silverstone",
+      path: "M 30,80 C 40,40 80,30 130,50 C 170,70 210,30 250,60 C 280,80 270,110 230,120 C 190,130 140,110 90,130 C 50,140 20,110 30,80 Z",
+      length: "5.891 km",
+      record: "1:27.097 (Max Verstappen)"
+    }
+  };
+
+  const [activeCircuit, setActiveCircuit] = useState('Monaco');
+  const circuit = circuits[activeCircuit];
+
+  return (
+    <div className="bg-black/30 border border-slate-800 p-4 rounded mt-4 font-mono text-[10px] text-slate-400">
+      <div className="flex justify-between items-center mb-3">
+        <span className="text-white font-bold uppercase tracking-wider">Interactive Track: {circuit.name}</span>
+        <div className="flex gap-2">
+          {Object.keys(circuits).map(name => (
+            <button
+              key={name}
+              onClick={() => setActiveCircuit(name)}
+              className={`px-2 py-0.5 border text-[9px] uppercase font-bold transition-all ${
+                activeCircuit === name ? 'border-red-650 text-red-500 bg-red-650/10' : 'border-slate-800 text-slate-500 hover:text-white'
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="relative h-[130px] flex items-center justify-center bg-black/45 rounded border border-slate-900 overflow-hidden">
+        {/* Radar grid lines */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:16px_16px]" />
+        
+        <svg viewBox="0 0 300 160" className="w-[85%] h-[85%] z-10 overflow-visible">
+          {/* Main track path background */}
+          <path
+            d={circuit.path}
+            fill="none"
+            stroke="#1e293b"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Active strategy window highlight */}
+          <path
+            d={circuit.path}
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="400"
+            strokeDashoffset={400 - (pitLap / 57) * 400}
+            className="transition-all duration-300"
+          />
+          {/* Sector division dots */}
+          <circle cx="50" cy="75" r="4" fill="#a855f7" className="shadow-lg" title="Sector 1" />
+          <circle cx="150" cy="50" r="4" fill="#22c55e" className="shadow-lg" title="Sector 2" />
+          <circle cx="220" cy="120" r="4" fill="#eab308" className="shadow-lg" title="Sector 3" />
+        </svg>
+
+        {/* Floating telemetry metrics */}
+        <div className="absolute bottom-2 left-2 text-left scale-90 origin-bottom-left text-[9px] text-slate-500 leading-tight">
+          <div>LENGTH: {circuit.length}</div>
+          <div>RECORD: {circuit.record}</div>
+        </div>
+        <div className="absolute top-2 right-2 text-right text-red-500 font-bold scale-90 origin-top-right">
+          PIT WINDOW TARGET: LAP {pitLap}
+        </div>
+      </div>
+      
+      {/* Slider for dragging along the lap line */}
+      <div className="mt-3">
+        <div className="flex justify-between text-[9px] uppercase text-slate-500 mb-1">
+          <span>Lap 1</span>
+          <span>Drag to Adjust Window</span>
+          <span>Lap 57</span>
+        </div>
+        <input
+          type="range"
+          min="5"
+          max="50"
+          value={pitLap}
+          onChange={(e) => setPitLap(Number(e.target.value))}
+          className="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-red-650"
+        />
+      </div>
+    </div>
+  );
+};
+
 const StrategyPage = () => {
   const [pitLap, setPitLap] = useState(18);
   const [targetTire, setTargetTire] = useState('Hard');
@@ -168,7 +267,7 @@ const StrategyPage = () => {
         <div className="lg:col-span-4 space-y-8">
           
           {/* Simulator Panel */}
-          <div className="bg-white dark:bg-[#111] border border-slate-200 dark:border-slate-800 p-6 shadow-sm relative overflow-hidden group">
+          <div className="glass-panel p-6 shadow-sm relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-red-600/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none transition-all group-hover:bg-red-600/10"></div>
             
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2 uppercase tracking-tight">
@@ -177,20 +276,7 @@ const StrategyPage = () => {
             </h3>
             
             <div className="space-y-6">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pit Window (Lap)</label>
-                  <span className="text-red-600 font-mono font-bold">{pitLap}</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="5" 
-                  max="50" 
-                  value={pitLap}
-                  onChange={(e) => setPitLap(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600"
-                />
-              </div>
+              <MonacoCircuitMap pitLap={pitLap} setPitLap={setPitLap} />
 
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 block">Target Compound</label>
@@ -266,7 +352,7 @@ const StrategyPage = () => {
         <div className="lg:col-span-8 space-y-8">
           
           {/* Tire Life Model Chart */}
-          <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-slate-800 p-6">
+          <div className="glass-panel p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-bold uppercase tracking-tight">Tire Degradation Model</h3>
@@ -300,7 +386,7 @@ const StrategyPage = () => {
           </div>
 
           {/* Head to Head Delta */}
-          <div className="bg-white dark:bg-[#0a0a0a] border border-slate-200 dark:border-slate-800 p-6">
+          <div className="glass-panel p-6">
              <div className="flex justify-between items-center mb-6">
               <div>
                 <h3 className="text-xl font-bold uppercase tracking-tight">Gap Delta vs Leader</h3>
